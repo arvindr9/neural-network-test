@@ -27,6 +27,22 @@ def sigmoid_backward(dA, cache):
     assert (dZ.shape == Z.shape)
     return dZ
 
+def load_data():
+    train_dataset = h5py.File('datasets/train_catvnoncat.h5', "r")
+    train_set_x_orig = np.array(train_dataset["train_set_x"][:])
+    train_set_y_orig = np.array(train_dataset["train_set_y"][:])
+
+    test_dataset = h5py.File('datasets/test_catvnoncat.h5', "r")
+    test_set_x_orig = np.array(test_dataset["test_set_x"][:])
+    test_set_y_orig = np.array(test_dataset["test_set_y"][:])
+
+    classes = np.array(test_dataset["list_classes"][:])
+
+    train_set_y_orig = train_set_y_orig.reshape((1, train_set_y_orig.shape[0]))
+    test_set_y_orig = test_set_y_orig.reshape((1, test_set_y_orig.shape[0]))
+
+    return train_set_x_orig, train_set_y_orig, test_set_x_orig, test_set_y_orig, classes
+
 def initialize_parameters(layer_dims):
     parameters = {}
     L = len(layer_dims)
@@ -73,7 +89,7 @@ def compute_cost(AL, Y):
     cost = np.squeeze(cost)
     assert(cost.shape == ())
     return cost
-define linear_backward(dZ, cache):
+def linear_backward(dZ, cache):
     A_prev, W, b = cache
     m = A_prev.shape[1]
     dW = 1./m * np.dot(dZ,A_prev.T)
@@ -113,8 +129,8 @@ def L_model_backward(AL, Y, caches):
 def update_parameters(parameters, grads, learning_rate):
     L = len(parameters)
     for l in range(L):
-        parameters["W" + str(l+1)] = parameters["W" + str(l+1)] - learning rate * grads["dW" + str(l+1)]
-        parameters["b" + str(l+1)] = parameters["b" + str(l+1)] - learning rate * grads["db" + str(l+1)]
+        parameters["W" + str(l+1)] = parameters["W" + str(l+1)] - learning_rate * grads["dW" + str(l+1)]
+        parameters["b" + str(l+1)] = parameters["b" + str(l+1)] - learning_rate * grads["db" + str(l+1)]
     return parameters
 
 def predict(X, y, parameters):
