@@ -16,7 +16,7 @@ def relu(Z):
 def relu_backward(dA, cache):
     Z = cache
     dZ = np.array(dA, copy=True)
-    dz[Z <= 0] = 0
+    dZ[Z <= 0] = 0
     assert (dZ.shape == Z.shape)
     return dZ
 
@@ -95,7 +95,7 @@ def linear_backward(dZ, cache):
     dW = 1./m * np.dot(dZ,A_prev.T)
     db = 1./m * np.sum(dZ, axis = 1, keepdims = True)
     dA_prev = np.dot(W.T,dZ)
-    assert(dA.prev.shape == A.prev.shape)
+    assert(dA_prev.shape == A_prev.shape)
     assert(dW.shape == W.shape)
     assert(db.shape == b.shape)
     return dA_prev, dW, db
@@ -120,17 +120,39 @@ def L_model_backward(AL, Y, caches):
     grads["dA" + str(L)], grads["dW" + str(L)], grads["db" + str(L)] = linear_activation_backward(dAL, current_cache, activation = "sigmoid")
     for l in reversed(range(L-1)):
         current_cache = caches[l]
-        dA_prev_temp, dW_temp, db_temp = linear_activation_backward(grads["DA" + str(l+2)], current_cache, activation = "relu")
+        dA_prev_temp, dW_temp, db_temp = linear_activation_backward(grads["dA" + str(l+2)], current_cache, activation = "relu")
         grads["dA" + str(l+1)] = dA_prev_temp
         grads["dW" + str(l+1)] = dW_temp
         grads["db" + str(l+1)] = db_temp
     return grads
 
 def update_parameters(parameters, grads, learning_rate):
-    L = len(parameters)
+    L = len(parameters) // 2
     for l in range(L):
         parameters["W" + str(l+1)] = parameters["W" + str(l+1)] - learning_rate * grads["dW" + str(l+1)]
         parameters["b" + str(l+1)] = parameters["b" + str(l+1)] - learning_rate * grads["db" + str(l+1)]
+        
+    return parameters
+
+def L_layer_model(X, Y, layers_dims, learning_rate = 0.0075, num_iterations = 3000, print_cost=False):
+    np.random.seed(1)
+    costs = []    
+    parameters = initialize_parameters(layers_dims)
+    for i in range(0, num_iterations):
+        AL, caches = L_model_forward(X, parameters)
+        cost = compute_cost(AL, Y)
+        grads = L_model_backward(AL, Y, caches)
+        parameters = update_parameters(parameters, grads, learning_rate)
+        if print_cost and i % 100 == 0:
+            print ("Cost after iteration %i: %f" %(i, cost))
+        if print_cost and i % 100 == 0:
+            costs.append(cost)
+    plt.plot(np.squeeze(costs))
+    plt.ylabel('cost')
+    plt.xlabel('iterations (per tens)')
+    plt.title("Learning rate =" + str(learning_rate))
+    plt.show()
+    
     return parameters
 
 def predict(X, y, parameters):
